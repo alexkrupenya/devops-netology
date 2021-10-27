@@ -1,3 +1,22 @@
 # devops-netology
-This file edited using ex editor.
-Second line.
+This file's been edited using ex editor.
+
+terraform/.gitignore:
+
+- будут пропущены все файлы в директориях с именем .terraform
+- будут пропущены файлы с именем, оканчивающимся на .tfstate
+- будут пропущены файлы с именем, имеюшие в середине имени  .tfstate.
+- будут пропущены файлы с именем crash.log
+- будут пропушены все файлы с именем, оканчивающимся на .tfvars
+- будут пропушены все файлы с именем override.tf
+- будут пропушены все файлы с именем override.tf.json
+- будут пропушены все файлы с именем, оканчивающимся на _override.tf
+- будут пропушены все файлы с именем, оканчивающимся на _override.tf.json
+- будут пропушены все файлы с именем .terraformrc
+- будут пропушены все файлы с именем terraform.rc
+
+
+
+
+
+
