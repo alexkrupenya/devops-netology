@@ -15,7 +15,7 @@ terraform/.gitignore:
 - будут пропушены все файлы с именем .terraformrc
 - будут пропушены все файлы с именем terraform.rc
 
-
+New Line added.
 
 
 
