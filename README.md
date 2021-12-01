@@ -397,7 +397,7 @@ dns.google.		704	IN	A	8.8.4.4
 ```
 Секция ANSWER и содержит A записи.  
 
-# Task 7
+# Task 8
 Для проверки записи PTR для адреса 8.8.8.8 также использую dig, но выполняю reverse search:  
 ```
 [alexvk@archbox ~]$ dig  @8.8.4.4  -x 8.8.8.8
