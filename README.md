@@ -1,428 +1,267 @@
 # Task 1
-
-Выполню следующее:  
-``telnet stackoverflow.com 80``  
-Получаю ответ от хоста:  
+*Проверьте список доступных сетевых интерфейсов на вашем компьютере. Какие команды есть для этого в Linux и в Windows?*  
+Воспользуюсь утилитой ip из iprout2.  
 ```
-[alexvk@archbox ~]$ telnet stackoverflow.com 80
-Trying 151.101.65.69...
-Connected to stackoverflow.com.
-Escape character is '^]'.
-GET /questions HTTP/1.0
-HOST: stackoverflow.com
-
-HTTP/1.1 301 Moved Permanently
-cache-control: no-cache, no-store, must-revalidate
-location: https://stackoverflow.com/questions
-x-request-guid: 7bfe9792-4cdc-4b6a-8aa9-fb8125e622c0
-feature-policy: microphone 'none'; speaker 'none'
-content-security-policy: upgrade-insecure-requests; frame-ancestors 'self' https://stackexchange.com
-Accept-Ranges: bytes
-Date: Sun, 28 Nov 2021 12:28:35 GMT
-Via: 1.1 varnish
-Connection: close
-X-Served-By: cache-fra19182-FRA
-X-Cache: MISS
-X-Cache-Hits: 0
-X-Timer: S1638102515.386696,VS0,VE92
-Vary: Fastly-SSL
-X-DNS-Prefetch-Control: off
-Set-Cookie: prov=a847da4e-b10a-eb3a-e973-60f6cf2d0ee3; domain=.stackoverflow.com; expires=Fri, 01-Jan-2055 00:00:00 GMT; path=/; HttpOnly
-
-Connection closed by foreign host.
+[alexvk@archbox devops]$ ip l 
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: enp2s0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc fq_codel state DOWN mode DEFAULT group default qlen 1000
+    link/ether 28:d2:44:b8:10:d0 brd ff:ff:ff:ff:ff:ff
+3: wlp1s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DORMANT group default qlen 1000
+    link/ether b0:10:41:2c:4f:8f brd ff:ff:ff:ff:ff:ff
 ```
-Посмотрю на запрос.  
-``GET /questions HTTP/1.0`` -- получить ответ от HTTP сервера методом GET по request-URI "/questions" по протоколу HTTP версии 1.0.  
-``HOST: stackoverflow.com`` -- указано целевое имя сервера, который должен выполнять запрос.   
+ip l показывает состояние всех имеющихся в наличии сетевых интерфейсов и их параметры и состояние (лежит/поднят).  
+Для староверов и просто для конформанса с остальными  Unix (GNU и не GNU, и BSD) используем ifconfig:
+```
+[alexvk@archbox Downloads]$ ifconfig  -a
+enp2s0: flags=4099<UP,BROADCAST,MULTICAST>  mtu 1500
+        ether 28:d2:44:b8:10:d0  txqueuelen 1000  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
 
-Разберу ответ от HTTP сервера в соответствие с *RFC 2616*.  
-``HTTP/1.1 301 Moved Permanently`` означает, что запрошенному ресурсу был назначен новый постоянный URI и в любых следующих
- в будущем ссылках на этот ресурс следует использовать один из возвращенных  URI. Проще говоря, сервер сообщает о редиректе.  
-``cache-control: no-cache, no-store, must-revalidate`` -- управление кешем:  запросить новую копию с сервера; не сохранять в  кеш  ни запрос, ни ответ;
-включает механизм, позволяющий  серверу-источнику требовать повторной проверки записи кэша при любом последующем использовании -- эта директива
-нужна для надежности.  
-``location: https://stackoverflow.com/questions`` -- это поле используется для редиректа клиента в местополжение, отличное от запрошенного им в request-URI. Поле состоит из 
-единственного абсолютного URL.  
-``x-request-guid: `7bfe9792-4cdc-4b6a-8aa9-fb8125e622c0`` -- уникальный идентификатор запроса. Зачем-то нужен именно этому серверу.  
-``feature-policy: microphone 'none'; speaker 'none'`` -- этот заголовок  предоставляет механизм, разрешающий или запрещающий использование функций браузера в его собственном фрейме 
-и в содержимом любых элементов iframe в документе. Значение -- микрофон и вывод звука не использовать.  
-``content-security-policy: upgrade-insecure-requests; frame-ancestors 'self' https://stackexchange.com`` -- директива  upgrade-insecure-requests предписывает пользовательским агентам обрабатывать
- все небезопасные URL-адреса сайта (обслуживаемые через HTTP), как если бы они были заменены безопасными URL-адресами (обслуживаемыми через HTTPS). Эта директива
- предназначена для веб-сайтов с большим количеством небезопасных устаревших URL-адресов, которые необходимо переписать. ``frame-ancestors 'self' https://stackexchange.com`` указывает 
-действительных родителей, которые могут встраивать страницу.  
-``Accept-Ranges: bytes`` --   это маркер, который использует сервер, чтобы уведомить клиента о поддержке "запросов по частям". Его значение указывает единицу измерения, 
-которая может быть использована для определения диапазона чтения. При наличии заголовка Accept-Ranges, браузер может попытаться возобновить прерванную загрузку, 
-а не запускать её с самого начала.  
-``Date: Sun, 28 Nov 2021 12:28:35 GMT`` -- время создания сообщения. Поле имеется всегда, за исключением 1. При генерации ошибки 100 или 101 время может быть указано, или не указано. 2.
- При возникновении ошибки 500 или 503, при которых невозможно создать текущую дату. 3. Если у сервера нет часов, способных обеспечить  время с достаточной точностью.   
-``Via: 1.1 varnish`` -- как указано в RFC 2616, поле общего заголовка Via должно использоваться шлюзами и прокси для  указания промежуточных протоколов и получателей, находящихся между
- клинтом  и сервером при передаче запросов, а также между исходным сервером и  клиентом при приеме ответов. То есть  в данном случае посредником при обмене запросами и ответами
-является ПО Varnish cache.  
-``Connection: close`` -- HTTP / 1.1 определяет параметр "закрыть" соединение для отправителя  как сигнал о том, что соединение будет закрыто после завершения    ответа.  
-``X-Served-By: cache-fra19182-FRA`` -- этот заголовок добавляется различными инструментами, чтобы обычно указать сервер, предоставивший ответ. Сюда входят 
-некоторые (но не все) хостинговые компании и сети доставки контента.  
-``X-Cache: MISS`` -- результат был получен от сервера, а не от сети доставки контента или кеширующего ПО.  
-``X-Timer: S1638102515.386696,VS0,VE92`` -- время, за которое запрос пробежал по кешу Varnish. Три поля - unix-time, начало запроса, конец запроса (в миллисекундах.  
-``Vary: Fastly-SSL`` -- если в источнике используются специальные значения (например, заголовки запросов) для выбора содержимого для пользователей или для  перенаправления запросов
- в соответствующие домены, то лучше включить эти значения в заголовок Vary. Это предотвратит случайное кэширование контента в доменах безопасности и предотвратит 
-отравление вашего кеша злоумышленниками.   
-``X-DNS-Prefetch-Control: off`` -- заголовок HTTP-ответа X-DNS-Prefetch-Control управляет предварительной выборкой DNS, функцией, с помощью которой браузеры заранее
- выполняют разрешение доменного имени для обеих ссылок, которые пользователь может выбрать для перехода, а также URL-адресов для элементов, на которые ссылается 
-документ, включая изображения, CSS, JavaScript и так далее. Эта предварительная выборка выполняется в фоновом режиме, так что DNS, вероятно, будет разрешен к тому
- времени, когда требуются элементы, на которые есть ссылка. Это сокращает время ожидания, когда пользователь щелкает ссылку. В данном случае механизм отключен.  
-``Set-Cookie: prov=a847da4e-b10a-eb3a-e973-60f6cf2d0ee3; domain=.stackoverflow.com; expires=Fri, 01-Jan-2055 00:00:00 GMT; path=/; HttpOnly`` -- HTTP заголовок Set-Cookie 
-используется для отправки cookies с сервера на агент пользователя. Можно видеть перечисление переменных, устанавливаемых у пользователя.  
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 134  bytes 9098 (8.8 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 134  bytes 9098 (8.8 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+wlp1s0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.88.35  netmask 255.255.255.0  broadcast 192.168.88.255
+        inet6 fe80::bc20:6932:74c8:143f  prefixlen 64  scopeid 0x20<link>
+        ether b0:10:41:2c:4f:8f  txqueuelen 1000  (Ethernet)
+        RX packets 148188  bytes 150979943 (143.9 MiB)
+        RX errors 0  dropped 4257  overruns 0  frame 0
+        TX packets 88420  bytes 25009206 (23.8 MiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+```
+В Windows существует похожая утилита **ipconfig**. Аналогично *ifconfig* принимает опцию /all для отображения всех интерфейсов машины.  
+Показать вывод не могу, Windows не имею.  
 
 # Task 2
-
-Повторю задание 1, использую консоль разработчика браузера chromium.  
-F12->Network, затем в адресной строке укажу http://stackoverflow.com  
-
-Ответ HTTP сервера:  
-General:  
-```Request URL: http://stackoverflow.com/
-Request Method: GET
-Status Code: 307 Internal Redirect
-Referrer Policy: strict-origin-when-cross-origin
+*Какой протокол используется для распознавания соседа по сетевому интерфейсу? Какой пакет и команды есть в Linux для этого?*  
+Для распознавания соседа по интерфейсу используется протокол arp (address resolution protocol). Команда arp из пакета net-tools справляется 
+с поставленной задачей. Либо для неофитов и исключительно пользователей GNU Linux - пакет iproute2 и соответственно ip:
 ```
-Response headers:  
-```HTTP/1.1 307 Internal Redirect
-Location: https://stackoverflow.com/
-Non-Authoritative-Reason: HSTS
+[alexvk@archbox Downloads]$ ip neigh s
+192.168.88.1 dev wlp1s0 lladdr b8:69:f4:fc:dd:f6 REACHABLE
 ```
-Request headers:  
-```GET / HTTP/1.1
-Upgrade-Insecure-Requests: 1
-User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36
-Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
+Пример вывода arp-таблицы с домашнего роутера Mikrotik RB952Ui-5ac2nD:
 ```
-
-Дольше всех выполнялся запрос ``Request URL: https://stackoverflow.com/``. Просмотр таймингов показал, что выполнялось ожидание ответа от сервера (Waiting (TTFB))=167мс, и 
-затем загрузка контента (Content Downloading)=200мс. Скриншот прилагаю.  
-![Скриншот браузера](images/3.6.01.png)
+[admin@MikroTik] /ip arp> print
+Flags: X - disabled, I - invalid, H - DHCP, D - dynamic, P - published, C - complete 
+ #    ADDRESS         MAC-ADDRESS       INTERFACE                                                                                                                                                                 
+ 0 DC 192.168.88.14   A0:28:ED:5D:43:4E bridge                                                                                                                                                                    
+ 1 DC 192.168.88.42   88:E9:FE:65:D4:12 bridge                                                                                                                                                                    
+ 2 DC 192.168.88.11   86:5E:D5:C9:BF:66 bridge                                                                                                                                                                    
+ 3 DC 192.168.88.22   28:64:B0:0B:94:24 bridge                                                                                                                                                                    
+ 4 DC 192.168.88.35   B0:10:41:2C:4F:8F bridge      
+```
+На практике еще часть применяется команда arping для того, чтобы узнать MAC-адрес интерфейса устройства по его IP адресу.  
+В действии:  
+```
+[alexvk@archbox ~]$ sudo arping -c 1 192.168.88.14
+ARPING 192.168.88.14 from 192.168.88.35 wlp1s0
+Unicast reply from 192.168.88.14 [A0:28:ED:5D:43:4E]  122.448ms
+Sent 1 probes (1 broadcast(s))
+Received 1 response(s)
+```
 
 # Task 3
 
-Для выяснения того, какой ip адрес использует ISP в Интернет для своих клиентов, попробую старым добрым traceroute.  
-```[alexvk@archbox ~]$  traceroute -An ya.ru
-traceroute to ya.ru (87.250.250.242), 30 hops max, 60 byte packets
- 1  192.168.88.1 [*]  2.708 ms  2.553 ms  2.462 ms
- 2  178.34.128.47 [AS12389]  3.073 ms  3.302 ms  3.154 ms
- 3  178.34.130.231 [AS12389]  3.537 ms  12.219 ms 178.34.129.231 [AS12389]  2.827 ms
- 4  188.128.126.238 [AS12389]  18.897 ms  19.265 ms  19.172 ms
- 5  * * *
- 6  rac [AS12389]  35.715 ms  36.787 ms  35.284 ms
- 7  * * *
- 8  87.250.250.242 [AS13238]  71.205 ms 10.1.1.1 [*]  82.497 ms 87.250.250.242 [AS13238]  71.039 ms
-
+*Какая технология используется для разделения L2 коммутатора на несколько виртуальных сетей? Какой пакет и команды есть в Linux для этого? Приведите пример конфига.*  
+Для разделения на виртуальные сети используется технология виртуальных меток на пакетах ethernet (VLAN). Пакеты метятся соответствующим номером сети (т.н. tag), и далее коммутатор
+разбирает эти пакеты в соответствие со своими установками по различным портам. Пакеты в сетях, использующих VLAN, называются тегированными, соответственно не помеченные пакеты 
+являются нетегированными.  
+Давным-давно в GNU Linux для VLAN использовалась утилита vconfig. Но время шло, ее функционал перекочевал в пакет iproute2, и теперь VLAN управляется утилитой ip.  
+Для примера учиним vlan за номером 42 на интерфейсе enp2s0. 
 ```
-1 хоп -- внутренний (частный) адрес, используемый устройством, занимающимся внутренней домашней сетью. 192.168.88.1 - адрес гейта, сеть соотв. 192.168.88.0/24.  
-2 хоп - адрес, через который ISP манипулирует клиентом  в своей сети.   
-Автономная сеть **AS12389**.  
-Но поскольку  реальное положение дел с NAT, кешами и переписанными маршрутами внутри сети ISP никому кроме него неизвестно, воспользуюсь сторонним сервисом.  
+[alexvk@archbox ~]$ sudo ip link add link enp2s0 name enp2s0.42 type vlan id 42
  
 ```
-[alexvk@archbox ~]$ dig +short myip.opendns.com @resolver1.opendns.com
-46.41.104.22
+Теперь посмотрю список интерфейсов.
 ```
-Проверю,  похоже ли это на моего ISP:
-
+[alexvk@archbox ~]$ ip l 
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: enp2s0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc fq_codel state DOWN mode DEFAULT group default qlen 1000
+    link/ether 28:d2:44:b8:10:d0 brd ff:ff:ff:ff:ff:ff
+3: wlp1s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP mode DORMANT group default qlen 1000
+    link/ether b0:10:41:2c:4f:8f brd ff:ff:ff:ff:ff:ff
+6: enp2s0.42@enp2s0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/ether 28:d2:44:b8:10:d0 brd ff:ff:ff:ff:ff:ff
 ```
-[alexvk@archbox ~]$ dig +short -x 46.41.104.22
-22.104.41.46.donpac.ru.
+Номер 6 - искомый VLAN интерфейс для получения тегированных пакетов для VLAN 42.  
+Посмотрю расширенную информацию об интерфейсе:
 ```
-Да, это он и есть.  
-Для проверки выполню трейс на указанный адрес:  
+[alexvk@archbox ~]$ ip -d link show enp2s0.42
+6: enp2s0.42@enp2s0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN mode DEFAULT group default qlen 1000
+    link/ether 28:d2:44:b8:10:d0 brd ff:ff:ff:ff:ff:ff promiscuity 0 minmtu 0 maxmtu 65535 
+    vlan protocol 802.1Q id 42 <REORDER_HDR> addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 64000 gso_max_segs 64 
 ```
-[alexvk@archbox ~]$ sudo traceroute 46.41.104.22
-traceroute to 46.41.104.22 (46.41.104.22), 30 hops max, 60 byte packets
- 1  22.104.41.46.donpac.ru (46.41.104.22)  2.116 ms  2.002 ms  1.963 ms
+Теперь назначу адрес на этот интерфейс:
 ```
-Задача выполнена.  
+[alexvk@archbox ~]$ sudo ip addr add 192.168.88.123/24 brd 192.168.100.255 dev enp2s0.42
+```
+Поднимаю интерфейс:
+```
+[alexvk@archbox ~]$ sudo ip link set dev enp2s0.42 up
+```
+Смотрю состояние интерфейса:
+```
+[alexvk@archbox ~]$ ip -d link show enp2s0.42
+4: enp2s0.42@enp2s0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state LOWERLAYERDOWN mode DEFAULT group default qlen 1000
+    link/ether 28:d2:44:b8:10:d0 brd ff:ff:ff:ff:ff:ff promiscuity 0 minmtu 0 maxmtu 65535 
+    vlan protocol 802.1Q id 42 <REORDER_HDR> addrgenmode eui64 numtxqueues 1 numrxqueues 1 gso_max_size 64000 gso_max_segs 64 
+```
+Интерфейс с vlan id=42 готов к работе, осталось только вставить разъем RJ-45.  
+Соответственно, если на вашем линукс-боксе есть пара интерфейсов, то можно организовать рутинг между VLAN и нетегированной сетью.  
+Всего доступно 4094 VLAN (12 бит, 0 и 4095 не используем). Это теоретически. Практически же количество VLAN на порту зависит 
+от типа используемого оборудования.  
+Погашу интерфейс.  
+```
+[alexvk@archbox ~]$ sudo ip link set dev enp2s0.42 down
+```
+Удалю vlan.  
+```
+[alexvk@archbox ~]$ sudo ip link delete enp2s0.42
+```
+Для получения постоянной конфигурации необходимо использовать текстовые конфиги systemd в более-менее современных Linux системах, либо скрипты 
+запуска rc.*  в системах SystemV, либо rc.net* в BSD.  
 
 # Task 4
+*Какие типы агрегации интерфейсов есть в Linux? Какие опции есть длягв балансировки нагрузки? Приведите пример конфига.*  
+Для агрегации интерфейсов ядром Linux применяется модуль bonding. Агрегация конформатна стандарту IEEE 802.3ad. Существует множество
+проприетарных протоколов, но они не являются предметов рассмотрения для Linux.  
+Модуль ядра bonding всегда доступен в большинстве современных дистрибутивов и дополнительно требует для управления пакеты iproute2 и ifenslave.  
+Согласно документации https://www.kernel.org/doc/Documentation/networking/bonding.txt, существуют следующие типы агрегации, предоставляемые этим модулем:  
+* balance rr - round-robin (циклическая) политика; передача пакетов в последовательном порядке с первого доступного интерфейса до последнего;
+* active-backup - один интерфейс в группе активен; если он выходит из строя, другой интерфейс группы берет на себя ответственность. Отказоустойчивое решение;
+* balance-xor - передача выполняется по избирательному хэширующему алгоритму. Политика по умолчанию - простая ( MAC-адрес источника XOR с MAC-адресом получателя 
+по модулю количества интерфейсов. Альтернативная схема политики может быть выбрана с помощью опции xmit_hash_policy;
+* broadcast - передавать на всех интерфейсах. Эта схема обеспечивает отказоустойчивость;
+* 802.3ad - IEEE 802.3ad агрегация. Создает группы агрегации, имеющие одинаковую скорость и дуплекс. Использует все интерфейсы в активной агрегации для выполнения
+спецификаций 802.3ad. Выбор интерфейса для исходящего трафика осуществляется в соответствии с политикой хеширования передачи, которая может быть изменена с
+простой политики XOR по умолчанию через xmit_hash_policy. Обратите внимание, что не все передают политики могут быть совместимы с 802.3ad, особенно в части
+требований к неправильному порядку пакетов раздела 43.2.4 стандарта 802.3ad. Различные одноранговые реализации будут иметь разные допуски несоблюдения стандарта. 
+Потребуется:
+1. Поддержка Ethtool в базовых драйверах для информирования о скорости и дуплексе каждого интерфейса.
+2. Коммутатор, поддерживающий динамическое агрегированное соединение IEEE 802.3ad. Для большинства коммутаторов потребуется определенная конфигурация  для включения
+ режима 802.3ad.
+* balance-tlb - адаптивная балансировка нагрузки при передаче; не требует специальных коммутаторов. Передача распределяется по всем интерфейсам для балансировки 
+нагрузки, прием ведется активным интерфейсом. 
+Потребуется:
+1. Поддержка Ethtool в базовых драйверах для информирования о скорости и дуплексе каждого интерфейса.
+* balance-alb - включает в себя подмножество balance-tlb, но распределяется не только исходящий трафик, а и входящий также балансируется. Не требует наличия
+специальных коммутаторов. Поскольку прием траффика основан на ARP negotiation, драйверы интерфейсов должны уметь менять MAC адреса своих устройств.  
+Потребуется:
+1. Поддержка Ethtool в базовых драйверах для информирования о скорости и дуплексе каждого интерфейса.
+2. Устройства, драйверы которых в состоянии изменять MAC адреса.  
+Таким образом, для балансировки нагрузки можно использовать опции balance-alb и balance-tlb.  
 
-Выясню больше информации об адресе, с которого выпускает клиентов провайдер:  
+Создам active backup bonding на двух интерфейсах для примера, поскольку это простой и удобный для экспериментов вариант.
 ```
-% This is the RIPE Database query service.
-% The objects are in RPSL format.
-%
-% The RIPE Database is subject to Terms and Conditions.
-% See http://www.ripe.net/db/support/db-terms-conditions.pdf
-
-% Note: this output has been filtered.
-%       To receive output for a database update, use the "-B" flag.
-
-% Information related to '46.41.96.0 - 46.41.127.255'
-
-% Abuse contact for '46.41.96.0 - 46.41.127.255' is 'abuse@rt.ru'
-
-inetnum:        46.41.96.0 - 46.41.127.255
-netname:        Macroregional_South
-descr:          OJSC Rostelecom Macroregional Branch South
-descr:          Rostov, Russia
-country:        RU
-admin-c:        VAS102-RIPE
-tech-c:         VAS102-RIPE
-status:         ASSIGNED PA
-remarks:        INFRA-AW
-mnt-by:         STC-MNT
-created:        2012-05-22T07:08:45Z
-last-modified:  2012-05-22T07:08:45Z
-source:         RIPE
-
-person:         Vladimir A. Sherstnev
-address:        wert@donpac.ru
-phone:          +7 863 2619163
-mnt-by:         ROSTOV-TELEGRAF-MNT
-nic-hdl:        VAS102-RIPE
-created:        2005-05-25T05:31:56Z
-last-modified:  2016-01-13T06:40:41Z
-source:         RIPE
-
-% Information related to '46.41.96.0/19AS21479'
-
-route:          46.41.96.0/19
-descr:          Routing object of
-descr:          Division of JSC "UTK" "Rostovelectrosviaz" and its deport
-origin:         AS21479
-mnt-routes:     ROSTOV-TELEGRAF-MNT
-mnt-by:         ROSTOV-TELEGRAF-MNT
-created:        2010-08-31T07:28:04Z
-last-modified:  2010-08-31T07:28:04Z
-source:         RIPE
-
-% This query was served by the RIPE Database Query Service version 1.101 (HEREFORD)
+[root@archbox ~]# ip link add bond0 type bond
+[root@archbox ~]# ip link set bond0 type bond miimon 100 mode active-backup
+[root@archbox ~]# ip link set enp2s0 down
+[root@archbox ~]# ip link set enp2s0 master bond0
+[root@archbox ~]# ip link set wlp1s0 down
+[root@archbox ~]# ip link set wlp1s0 master bond0
+[root@archbox ~]# ip link set bond0 up
 ```
-Таким образом, просмотрев данные, полученные whois из базы ripe.net, определяю провайдера как Ростелеком (бывш. ЮТК, бывш. Ростовэлектросвязь, бывш. Ростовский телеграф).  
-Автономная система имеет имя (поле origin) **AS21479** и описание *Division of JSC "UTK" "Rostovelectrosviaz" and its deport*.  Интересно, что поле "descr"  не меняли с 31.08. 2010 года.  
+На выходе имеется готовый интерфейс bond0.
+```
+[root@archbox ~]# ip l 
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+2: enp2s0: <NO-CARRIER,BROADCAST,MULTICAST,SLAVE,UP> mtu 1500 qdisc fq_codel master bond0 state DOWN mode DEFAULT group default qlen 1000
+    link/ether 12:45:22:ea:2a:56 brd ff:ff:ff:ff:ff:ff permaddr 28:d2:44:b8:10:d0
+3: wlp1s0: <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> mtu 1500 qdisc mq master bond0 state UP mode DORMANT group default qlen 1000
+    link/ether 12:45:22:ea:2a:56 brd ff:ff:ff:ff:ff:ff permaddr b0:10:41:2c:4f:8f
+4: bond0: <BROADCAST,MULTICAST,MASTER,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether 12:45:22:ea:2a:56 brd ff:ff:ff:ff:ff:ff
+```
+и файл bond0:
+```
+[root@archbox ~]# ls /proc/net/bonding/
+bond0
+```
+Получу адрес через dhcp:
+```
+[root@archbox ~]# dhclient bond0
+```
+Проверю состояние интерфейсов:
+```
+[root@archbox ~]# ip a s
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host 
+       valid_lft forever preferred_lft forever
+2: enp2s0: <NO-CARRIER,BROADCAST,MULTICAST,SLAVE,UP> mtu 1500 qdisc fq_codel master bond0 state DOWN group default qlen 1000
+    link/ether 12:45:22:ea:2a:56 brd ff:ff:ff:ff:ff:ff permaddr 28:d2:44:b8:10:d0
+3: wlp1s0: <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> mtu 1500 qdisc mq master bond0 state UP group default qlen 1000
+    link/ether 12:45:22:ea:2a:56 brd ff:ff:ff:ff:ff:ff permaddr b0:10:41:2c:4f:8f
+    inet 192.168.88.26/24 brd 192.168.88.255 scope global dynamic noprefixroute wlp1s0
+       valid_lft 286sec preferred_lft 286sec
+4: bond0: <BROADCAST,MULTICAST,MASTER,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether 12:45:22:ea:2a:56 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.88.26/24 brd 192.168.88.255 scope global bond0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::1045:22ff:feea:2a56/64 scope link 
+       valid_lft forever preferred_lft forever
+```
+Видно активный интерфейс и адрес группы. Задача решена.
 
 # Task 5
-Пакеты, отправленные на *8.8.8.8*, проходят по следующему маршруту:
-```
-[alexvk@archbox ~]$ traceroute -An 8.8.8.8
-traceroute to 8.8.8.8 (8.8.8.8), 30 hops max, 60 byte packets
- 1  192.168.88.1 [*]  4.795 ms  4.675 ms  4.615 ms
- 2  178.34.128.47 [AS12389]  4.741 ms  4.925 ms  5.126 ms
- 3  178.34.129.231 [AS12389]  4.450 ms  4.391 ms 178.34.130.231 [AS12389]  4.306 ms
- 4  87.226.181.89 [AS12389]  51.653 ms 87.226.183.89 [AS12389]  50.837 ms  50.644 ms
- 5  5.143.253.245 [AS12389]  50.858 ms 74.125.51.172 [AS15169]  51.165 ms  50.977 ms
- 6  108.170.250.83 [AS15169]  51.811 ms 108.170.250.130 [AS15169]  35.318 ms 108.170.250.113 [AS15169]  37.578 ms
- 7  172.253.66.116 [AS15169]  52.849 ms 142.251.49.24 [AS15169]  49.884 ms *
- 8  108.170.235.204 [AS15169]  49.769 ms 172.253.65.82 [AS15169]  46.574 ms 216.239.48.224 [AS15169]  35.396 ms
- 9  172.253.79.237 [AS15169]  43.442 ms 216.239.54.201 [AS15169]  45.455 ms 172.253.70.47 [AS15169]  43.521 ms
-10  * * *
-11  * * *
-12  * * *
-13  * * *
-14  * * *
-15  * * *
-16  * * *
-17  * * *
-18  * * *
-19  8.8.8.8 [AS15169]  49.358 ms  45.482 ms  51.699 ms
-```
-В передаче пакета принимают участие следующие AS:  
-**AS12389** и **AS15169** соответственно.  
-AS12389:  
-```
-[alexvk@archbox ~]$ whois AS12389 | more
-% This is the RIPE Database query service.
-% The objects are in RPSL format.
-%
-% The RIPE Database is subject to Terms and Conditions.
-% See http://www.ripe.net/db/support/db-terms-conditions.pdf
+*Сколько IP адресов в сети с маской /29 ? Сколько /29 подсетей можно получить из сети с маской /24. Приведите несколько примеров /29 подсетей внутри сети 10.10.10.0/24*  
+1. Выполню простой арифметический подсчет. Маска подсети /29, то есть долой 29 бит из 32, остается 3 бита. Получаем 2^3 = 8. Первый адрес - адрес сети, не используется
+для хостов. Последний - широковещательный, broadcast. На хосты остается **6** адресов.
+2. В сети с маской /24 имеется 8 бит для адресации, в сети /29 - 3 бита. Очевидно, что **(2^8)/(2^3)=32** подсети имеют место быть по условию задачи.
+3. Сеть 10.10.10.0/24 - частная сеть класса А. В соответствие с задачей п.2 можем разбить эту сеть на подсети:  10.10.10.0/29, 10.10.10.8/29, 10.10.10.16/29, 10.10.10.24/29 и так далее. 
+Числовой ряд E=N+8, где N - последнее число в тетраде, для образования непересекающихся подмножеств в сети с маской 255.255.255.0.  
 
-% Note: this output has been filtered.
-%       To receive output for a database update, use the "-B" flag.
-
-% Information related to 'AS12288 - AS12454'
-
-as-block:       AS12288 - AS12454
-descr:          RIPE NCC ASN block
-remarks:        These AS Numbers are assigned to network operators in the RIPE NCC service region.
-mnt-by:         RIPE-NCC-HM-MNT
-created:        2018-11-22T15:27:24Z
-last-modified:  2018-11-22T15:27:24Z
-source:         RIPE
-
-% Information related to 'AS12389'
-
-% Abuse contact for 'AS12389' is 'abuse@rt.ru'
-
-aut-num:        AS12389
-as-name:        ROSTELECOM-AS
-<--skipped-->
-```
-AS15169.  
-```
-[alexvk@archbox ~]$ whois AS15169
-
-#
-# ARIN WHOIS data and services are subject to the Terms of Use
-# available at: https://www.arin.net/resources/registry/whois/tou/
-#
-# If you see inaccuracies in the results, please report at
-# https://www.arin.net/resources/registry/whois/inaccuracy_reporting/
-#
-# Copyright 1997-2021, American Registry for Internet Numbers, Ltd.
-#
-
-
-ASNumber:       15169
-ASName:         GOOGLE
-ASHandle:       AS15169
-RegDate:        2000-03-30
-Updated:        2012-02-24    
-Ref:            https://rdap.arin.net/registry/autnum/15169
-
-
-OrgName:        Google LLC
-OrgId:          GOGL
-Address:        1600 Amphitheatre Parkway
-City:           Mountain View
-StateProv:      CA
-PostalCode:     94043
-Country:        US
-RegDate:        2000-03-30
-Updated:        2019-10-31
-Comment:        Please note that the recommended way to file abuse complaints are located in the following links. 
-Comment:        
-Comment:        To report abuse and illegal activity: https://www.google.com/contact/
-Comment:        
-Comment:        For legal requests: http://support.google.com/legal 
-Comment:        
-Comment:        Regards, 
-Comment:        The Google Team
-Ref:            https://rdap.arin.net/registry/entity/GOGL
-
-
-OrgAbuseHandle: ABUSE5250-ARIN
-OrgAbuseName:   Abuse
-OrgAbusePhone:  +1-650-253-0000 
-OrgAbuseEmail:  network-abuse@google.com
-OrgAbuseRef:    https://rdap.arin.net/registry/entity/ABUSE5250-ARIN
-
-OrgTechHandle: ZG39-ARIN
-OrgTechName:   Google LLC
-OrgTechPhone:  +1-650-253-0000 
-OrgTechEmail:  arin-contact@google.com
-OrgTechRef:    https://rdap.arin.net/registry/entity/ZG39-ARIN
-
-RTechHandle: ZG39-ARIN
-RTechName:   Google LLC
-RTechPhone:  +1-650-253-0000 
-RTechEmail:  arin-contact@google.com
-RTechRef:    https://rdap.arin.net/registry/entity/ZG39-ARIN
-<--skipped-->
-```
 # Task 6
-Проведу тот же эксперимент с утилитой *mtr*, используя опции -r (отчет), 
--n (не выполнять просмотр DNS), -z (разрешать AS):  
-```
-[alexvk@archbox ~]$ time mtr -r -n -z 8.8.8.8
-Start: 2021-12-01T10:23:56+0300
-HOST: archbox                     Loss%   Snt   Last   Avg  Best  Wrst StDev
-  1. AS???    192.168.88.1         0.0%    10    3.8  10.1   0.9  73.4  22.3
-  2. AS12389  178.34.128.47        0.0%    10    4.9  27.0   3.0  92.1  33.1
-  3. AS12389  178.34.129.231       0.0%    10    2.8  18.7   2.8  90.7  28.5
-  4. AS???    ???                 100.0    10    0.0   0.0   0.0   0.0   0.0
-  5. AS15169  74.125.51.172        0.0%    10   36.2  37.3  34.8  42.3   2.2
-  6. AS15169  108.170.250.130      0.0%    10   35.5  45.7  35.2 126.4  28.4
-  7. AS15169  209.85.255.136       0.0%    10   54.6  79.2  54.1 151.0  38.9
-  8. AS15169  209.85.254.20        0.0%    10   54.2  84.2  54.2 153.8  42.9
-  9. AS15169  216.239.63.27        0.0%    10   56.3  72.5  54.0 156.4  33.5
- 10. AS???    ???                 100.0    10    0.0   0.0   0.0   0.0   0.0
- 11. AS???    ???                 100.0    10    0.0   0.0   0.0   0.0   0.0
- 12. AS???    ???                 100.0    10    0.0   0.0   0.0   0.0   0.0
- 13. AS???    ???                 100.0    10    0.0   0.0   0.0   0.0   0.0
- 14. AS???    ???                 100.0    10    0.0   0.0   0.0   0.0   0.0
- 15. AS???    ???                 100.0    10    0.0   0.0   0.0   0.0   0.0
- 16. AS???    ???                 100.0    10    0.0   0.0   0.0   0.0   0.0
- 17. AS???    ???                 100.0    10    0.0   0.0   0.0   0.0   0.0
- 18. AS???    ???                 100.0    10    0.0   0.0   0.0   0.0   0.0
- 19. AS15169  8.8.8.8             40.0%    10   53.1  60.9  41.7 124.6  31.6
-
-real	0m16,684s
-user	0m0,033s
-sys	0m0,096s
-```
-Наибольшая задержка наблюдается на узле ``8. AS15169  209.85.254.20``.  
-Время задержки выясняю по полю Avg. Также поле стандартной девиации StDev подтверждает выводы.  
+*Задача: вас попросили организовать стык между 2-мя организациями. Диапазоны 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16 уже заняты. Из какой подсети допустимо взять частные IP адреса? 
+Маску выберите из расчета максимум 40-50 хостов внутри подсети.*
+В задании совершенно точно сформулировано требование о выделении частной подсети. Поскольку широко известные частные сети уже полностью заняты, обращусь к RFC6890.
+В этом документе п.2.2.2 заявлено, что существует еще одна частная подсеть 100.64.0.0/10, предназначенная для shared address space. Воспользуюсь ею. 22 бита на хосты слишком
+расточительно по условию задачи, поэтому для возьму подсеть из конца диапазона 10.127.255.0/26. 6 бит дает 2^6 хостов, итого 62 за вычетом сети и бродкаста.   
+Если и это слишком расточительно, то можно организовать две подсети 10.127.255.0/27 и 10.127.255.32/28, что в сумме даст 30+14=44 хоста.  
 
 # Task 7
-Выясню, какие серверы отвечают за доменное имя dns.google. Для этого можно воспользоваться утилитой nslookup:  
+*Как проверить ARP таблицу в Linux, Windows? Как очистить ARP кеш полностью? Как из ARP таблицы удалить только один нужный IP?*  
+Для проверки таблицы ARP нужен пакет iproute2, и утилита ip сделает всю работу за вас. Старая школа воспользуется утилитой arp из пакета
+net-tools.
 ```
- [alexvk@archbox ~]$ nslookup
-> dns.google
-Server:		192.168.88.1
-Address:	192.168.88.1#53
-
-Non-authoritative answer:
-Name:	dns.google
-Address: 8.8.8.8
-Name:	dns.google
-Address: 8.8.4.4
-Name:	dns.google
-> 
+[alexvk@archbox ~]$ arp -a -i wlp1s0
+_gateway (192.168.88.1) at b8:69:f4:fc:dd:f6 [ether] on wlp1s0
 ```
-Либо утилитой dig:  
+Утилита ip.
 ```
-[alexvk@archbox ~]$ dig +short dns.google
-8.8.8.8
-8.8.4.4
+[alexvk@archbox ~]$ ip neigh show dev wlp1s0
+192.168.88.1 lladdr b8:69:f4:fc:dd:f6 REACHABLE
 ```
-Очевидно, что имя "dns.google" в пространстве IPV4 имеет адреса 8.8.8.8 и 8.8.4.4, что и является в DNS искомымиA-записями (адресами).  
-Для более наглядного пояснения уберу опцию +short в вызове dig:
+Для очистки всей таблицы arp:
 ```
-[alexvk@archbox ~]$ dig dns.google.
+[alexvk@archbox ~]$ sudo ip -s neigh flush all
 
-; <<>> DiG 9.16.23 <<>> dns.google.
-;; global options: +cmd
-;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 33609
-;; flags: qr rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 0
-
-;; QUESTION SECTION:
-;dns.google.			IN	A
-
-;; ANSWER SECTION:
-dns.google.		704	IN	A	8.8.8.8
-dns.google.		704	IN	A	8.8.4.4
-
-;; Query time: 3 msec
-;; SERVER: 192.168.88.1#53(192.168.88.1)
-;; WHEN: Wed Dec 01 10:46:30 MSK 2021
-;; MSG SIZE  rcvd: 60
+*** Round 1, deleting 1 entries ***
+*** Flush is complete after 1 round ***
 ```
-Секция ANSWER и содержит A записи.  
-
-# Task 8
-Для проверки записи PTR для адреса 8.8.8.8 также использую dig, но выполняю reverse search:  
+К сожалению, утилита arp не позволяет очистить весь ARP кеш одним наскоком. Можно лишь попрактиковать поштучное удаление или написать небольшой 
+скрипт на awk.  
+ 
+В Windows, насколько я помню, также применяется утилита arp с ключом -a. Команда покажет таблицу ARP.  
+Для очистки кеша ARP применяется команда ``netsh interface ip delete arpcache``.  
+Для удаления определенного адреса из таблицы используется arp -d xxxx.xxxx.xxxx.xxxx, где последнее - IP адрес. Дополнительно можно указать,
+на каком интерфейсе выполнить удаление адреса. С помощью утилиты ip удаление выполняется так:
 ```
-[alexvk@archbox ~]$ dig  @8.8.4.4  -x 8.8.8.8
-
-; <<>> DiG 9.16.23 <<>> @8.8.4.4 -x 8.8.8.8
-; (1 server found)
-;; global options: +cmd
-;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 12725
-;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
-
-;; OPT PSEUDOSECTION:
-; EDNS: version: 0, flags:; udp: 512
-;; QUESTION SECTION:
-;8.8.8.8.in-addr.arpa.		IN	PTR
-
-;; ANSWER SECTION:
-8.8.8.8.in-addr.arpa.	12992	IN	PTR	dns.google.
-
-;; Query time: 43 msec
-;; SERVER: 8.8.4.4#53(8.8.4.4)
-;; WHEN: Wed Dec 01 10:49:34 MSK 2021
-;; MSG SIZE  rcvd: 73
+[alexvk@archbox ~]$ sudo ip -s neigh del 192.168.88.1 dev wlp1s0
 ```
-Для сокращения вывода можно использовать опцию +short.  
-Искомая строка в секции ANSWER: ``8.8.8.8.in-addr.arpa.	12992	IN	PTR	dns.google.``  
-
 
