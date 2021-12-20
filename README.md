@@ -151,7 +151,7 @@ while True :
   for aim in dest:
     addr = socket.gethostbyname(aim)
     if addr != dest[aim]:
-      print ('[ERROR]', aim, 'IP mistmatch:', dest[aim], addr)
+      print ('[ERROR]', aim, 'IP mismatch:', dest[aim], addr)
       dest[aim] = addr
   time.sleep(random.randint(3,9))
 ```
@@ -159,19 +159,19 @@ while True :
 ### Вывод скрипта при запуске при тестировании:
 ```
 [alexvk@archbox devops]$ ./servtest.py 
-[ERROR] mail.google.com IP mistmatch: 74.125.131.19 74.125.131.17
-[ERROR] google.com IP mistmatch: 173.194.73.101 173.194.73.113
-[ERROR] mail.google.com IP mistmatch: 74.125.131.17 74.125.131.19
-[ERROR] google.com IP mistmatch: 173.194.73.113 173.194.73.100
-[ERROR] mail.google.com IP mistmatch: 74.125.131.19 74.125.131.17
-[ERROR] google.com IP mistmatch: 173.194.73.100 173.194.73.138
-[ERROR] mail.google.com IP mistmatch: 74.125.131.17 74.125.131.19
-[ERROR] google.com IP mistmatch: 173.194.73.138 173.194.73.139
-[ERROR] mail.google.com IP mistmatch: 74.125.131.19 74.125.131.17
-[ERROR] google.com IP mistmatch: 173.194.73.139 173.194.73.102
-[ERROR] google.com IP mistmatch: 173.194.73.102 173.194.73.101
-[ERROR] mail.google.com IP mistmatch: 74.125.131.17 74.125.131.19
-[ERROR] google.com IP mistmatch: 173.194.73.101 173.194.73.113
+[ERROR] mail.google.com IP mismatch: 74.125.131.19 74.125.131.17
+[ERROR] google.com IP mismatch: 173.194.73.101 173.194.73.113
+[ERROR] mail.google.com IP mismatch: 74.125.131.17 74.125.131.19
+[ERROR] google.com IP mismatch: 173.194.73.113 173.194.73.100
+[ERROR] mail.google.com IP mismatch: 74.125.131.19 74.125.131.17
+[ERROR] google.com IP mismatch: 173.194.73.100 173.194.73.138
+[ERROR] mail.google.com IP mismatch: 74.125.131.17 74.125.131.19
+[ERROR] google.com IP mismatch: 173.194.73.138 173.194.73.139
+[ERROR] mail.google.com IP mismatch: 74.125.131.19 74.125.131.17
+[ERROR] google.com IP mismatch: 173.194.73.139 173.194.73.102
+[ERROR] google.com IP mismatch: 173.194.73.102 173.194.73.101
+[ERROR] mail.google.com IP mismatch: 74.125.131.17 74.125.131.19
+[ERROR] google.com IP mismatch: 173.194.73.101 173.194.73.113
 ^CTraceback (most recent call last):
   File "/home/alexvk/learn/devops/./servtest.py", line 25, in <module>
     time.sleep(random.randint(3,9))
