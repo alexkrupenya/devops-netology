@@ -17,20 +17,20 @@
 [alexvk@archbox ~]$ yc config list
 token: AQXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 cloud-id: b1g0nrf39i3bjgqgelj6
-folder-id: b1gu0p7nfai9neniqsf7
+folder-id: b1g68bss5trqk0sk71o5
 compute-default-zone: ru-central1-a
 ```
 
 Далее, создаю сеть для облачных ВМ:
 ```
-[alexvk@archbox ~]$ yc vpc network create \
-> --name testnet \
+[alexvk@archbox devops]$ yc vpc network create \
+> --name=net \
 > --labels my-label=netology \
 > --description "my first test network"
-id: enp12n0epinedcff3pt3
+id: enpijt10pr8voa6kssif
 folder_id: b1g68bss5trqk0sk71o5
-created_at: "2022-02-02T07:13:31Z"
-name: testnet
+created_at: "2022-02-09T08:18:48Z"
+name: net
 description: my first test network
 labels:
   my-label: netology
@@ -38,28 +38,28 @@ labels:
 
 Посмотрю список имеющихся сетей:
 ```
-[alexvk@archbox ~]$ yc vpc network list
-+----------------------+---------+
-|          ID          |  NAME   |
-+----------------------+---------+
-| enp12n0epinedcff3pt3 | testnet |
-+----------------------+---------+
+[alexvk@archbox devops]$ yc vpc network list
++----------------------+------+
+|          ID          | NAME |
++----------------------+------+
+| enpijt10pr8voa6kssif | net  |
++----------------------+------+
 ```
 
 Теперь требуется создать подсеть:
 ```
 [alexvk@archbox ~]$ yc vpc subnet create \
-> --name test-subnet-a \
+> --name my-subnet-a \
 > --zone ru-central1-a \
-> --range 10.1.2.0.24 \
-> --network-name testnet \
+> --range 10.1.2.0/24 \
+> --network-name net \
 > --description "first test subnet"
-id: e9bl8ci4g52d0ftjmla2
+id: e9b9r1ha9sj7h1b9gv63
 folder_id: b1g68bss5trqk0sk71o5
-created_at: "2022-02-02T07:39:00Z"
-name: test-subnet-a
+created_at: "2022-02-09T08:24:19Z"
+name: my-subnet-a
 description: first test subnet
-network_id: enp12n0epinedcff3pt3
+network_id: enpijt10pr8voa6kssif
 zone_id: ru-central1-a
 v4_cidr_blocks:
 - 10.1.2.0/24
@@ -67,8 +67,10 @@ v4_cidr_blocks:
 Проверяю версию packer:
 ```
 [alexvk@archbox ~]$ packer -v
-1.7.9
+1.7.10
 ```
+В секции "builders" изменяю параметры переменных на необходимые мне:  
+folder_id, subnet_id, token, zone.
 Проверяю валидность сборки:
 ```
 [alexvk@archbox ~]$ packer validate centos-7-base.json
@@ -76,31 +78,31 @@ The configuration is valid.
 ```
 Провожу сборку:
 ```
-[alexvk@archbox ~]$ packer build centos-7-base.json
+[alexvk@archbox 1]$ packer build centos-7-base.json 
 yandex: output will be in this color.
 
 ==> yandex: Creating temporary RSA SSH key for instance...
-==> yandex: Using as source image: fd8aqitd4vl5950ihohp (name: "centos-7-v20220131", family: "centos-7")
-==> yandex: Use provided subnet id e9bl8ci4g52d0ftjmla2
+==> yandex: Using as source image: fd8gdnd09d0iqdu7ll2a (name: "centos-7-v20220207", family: "centos-7")
+==> yandex: Use provided subnet id e9b9r1ha9sj7h1b9gv63
 ==> yandex: Creating disk...
 ==> yandex: Creating instance...
-==> yandex: Waiting for instance with id fhmhe9b3mh0aoj4bg4ia to become active...
-    yandex: Detected instance IP: 51.250.7.148
-==> yandex: Using SSH communicator to connect: 51.250.7.148
+==> yandex: Waiting for instance with id fhm4a7955ccu0u7hr0b6 to become active...
+    yandex: Detected instance IP: 84.201.172.187
+==> yandex: Using SSH communicator to connect: 84.201.172.187
 ==> yandex: Waiting for SSH to become available...
 ==> yandex: Connected to SSH!
-==> yandex: Provisioning with shell script: /tmp/packer-shell2111298604
+==> yandex: Provisioning with shell script: /tmp/packer-shell3458137065
     yandex: Loaded plugins: fastestmirror
     yandex: Loading mirror speeds from cached hostfile
-    yandex:  * base: mirror.yandex.ru
-    yandex:  * extras: mirror.yandex.ru
-    yandex:  * updates: mirror.yandex.ru
+    yandex:  * base: mirror.sale-dedic.com
+    yandex:  * extras: mirrors.datahouse.ru
+    yandex:  * updates: mirror.sale-dedic.com
     yandex: No packages marked for update
     yandex: Loaded plugins: fastestmirror
     yandex: Loading mirror speeds from cached hostfile
-    yandex:  * base: mirror.yandex.ru
-    yandex:  * extras: mirror.yandex.ru
-    yandex:  * updates: mirror.yandex.ru
+    yandex:  * base: mirror.sale-dedic.com
+    yandex:  * extras: mirrors.datahouse.ru
+    yandex:  * updates: mirror.sale-dedic.com
     yandex: Package iptables-1.4.21-35.el7.x86_64 already installed and latest version
     yandex: Package curl-7.29.0-59.el7_9.1.x86_64 already installed and latest version
     yandex: Package net-tools-2.0-0.25.20131004git.el7.x86_64 already installed and latest version
@@ -161,7 +163,7 @@ yandex: output will be in this color.
     yandex: Installed size: 9.0 M
     yandex: Downloading packages:
     yandex: --------------------------------------------------------------------------------
-    yandex: Total                                              9.1 MB/s | 3.8 MB  00:00
+    yandex: Total                                               10 MB/s | 3.8 MB  00:00
     yandex: Running transaction check
     yandex: Running transaction test
     yandex: Transaction test succeeded
@@ -211,20 +213,20 @@ yandex: output will be in this color.
 ==> yandex: Success image create...
 ==> yandex: Destroying boot disk...
     yandex: Disk has been deleted!
-Build 'yandex' finished after 2 minutes 28 seconds.
+Build 'yandex' finished after 2 minutes 18 seconds.
 
-==> Wait completed after 2 minutes 28 seconds
+==> Wait completed after 2 minutes 18 seconds
 
 ==> Builds finished. The artifacts of successful builds are:
---> yandex: A disk image was created: centos-7-base (id: fd8jt4i54r12uvrsheh1) with family name centos
+--> yandex: A disk image was created: centos-7-base (id: fd8ps7ctj31891r2jjg1) with family name centos
 ```
 Далее по заданию нужен листинг образов ОС:
 ```
-[alexvk@archbox ~]$ yc compute image list
+ialexvk@archbox 1]$ yc compute image list
 +----------------------+---------------+--------+----------------------+--------+
 |          ID          |     NAME      | FAMILY |     PRODUCT IDS      | STATUS |
 +----------------------+---------------+--------+----------------------+--------+
-| fd8jt4i54r12uvrsheh1 | centos-7-base | centos | f2eacrudv331nbat9ehb | READY  |
+| fd8ps7ctj31891r2jjg1 | centos-7-base | centos | f2e40ohi7d1hori8m71b | READY  |
 +----------------------+---------------+--------+----------------------+--------+
 ```
 Задание выполнено.
@@ -237,75 +239,14 @@ Build 'yandex' finished after 2 minutes 28 seconds.
 
 * *Скриншот страницы свойств созданной ВМ, как на примере.*
 
-Создам виртуальную машину из собранного образа:
+Для создания ВМ воспользуюсь Terraform. В каталоге src/ домашнего задания находятся необходимые конфигурационные
+файлы. Чтобы Terraform корректно отработал, нужно внести изменения в файл *variables.tf*.   
+Создаю сервисный аккаунт *operator* с соответствующими правами.
 ```
-[alexvk@archbox devops]$ yc compute instance create\ 
---name test-vm-from-image \
---zone ru-central1-a \ 
---create-boot-disk name=disk1,size=10,image-id=fd8jt4i54r12uvrsheh1 \
---public-ip \ 
---ssh-key ~/.ssh/id_rsa.pub
-
-done (27s)
-id: fhmct1erqck07e0s9s7e
-folder_id: b1g68bss5trqk0sk71o5
-created_at: "2022-02-02T10:17:01Z"
-name: test-vm-from-image
-zone_id: ru-central1-a
-platform_id: standard-v2
-resources:
-  memory: "2147483648"
-  cores: "2"
-  core_fraction: "100"
-status: RUNNING
-boot_disk:
-  mode: READ_WRITE
-  device_name: fhmpqmkit14o4km70vqv
-  auto_delete: true
-  disk_id: fhmpqmkit14o4km70vqv
-network_interfaces:
-- index: "0"
-  mac_address: d0:0d:ce:85:db:d3
-  subnet_id: e9bl8ci4g52d0ftjmla2
-  primary_v4_address:
-    address: 10.1.2.18
-    one_to_one_nat:
-      address: 51.250.12.87
-      ip_version: IPV4
-fqdn: fhmct1erqck07e0s9s7e.auto.internal
-scheduling_policy: {}
-network_settings:
-  type: STANDARD
-placement_policy: {}
-```
-Проверяю состояние VM:
-```
-[alexvk@archbox devops]$ yc compute instance list
-+----------------------+--------------------+---------------+---------+--------------+-------------+
-|          ID          |        NAME        |    ZONE ID    | STATUS  | EXTERNAL IP  | INTERNAL IP |
-+----------------------+--------------------+---------------+---------+--------------+-------------+
-| fhmct1erqck07e0s9s7e | test-vm-from-image | ru-central1-a | RUNNING | 51.250.12.87 | 10.1.2.18   |
-+----------------------+--------------------+---------------+---------+--------------+-------------+
-```
-
-![Скриншот состояния VM](images/54298719.png)
-
-# Task 3
-
-*Создать ваш первый готовый к боевой эксплуатации компонент мониторинга, состоящий из стека микросервисов.*
-
-*Для получения зачета, вам необходимо предоставить:*
-
-* *Скриншот работающего веб-интерфейса Grafana с текущими метриками, как на примере ниже*
-
-Для выполнения задания используется Terraform и Ansible.  
-Прежде всего необходимо создать сеервисный аккаунт для облака.  
-Создаю аккаунт *operator* с соответствующими правами.
-```
-[alexvk@archbox ~]$ yc iam key create --service-account-name default-sa --output key.json
-id: aje83v701b1un777sh40
-service_account_id: aje3932acd0c5ur7dagp
-created_at: "2019-08-26T12:31:25Z"
+[alexvk@archbox ~]$ yc iam key create --service-account-name operator --output key.json
+id: ajebav84b1ldt3jqrp3b
+service_account_id: ajebav84b1ldt3jqrp3b
+created_at: "2022-02-03 07:26:51Z"
 key_algorithm: RSA_2048
 ```
 Далее создаю профиль в соответствие с документацией к яндекс-облаку, ссылка https://cloud.yandex.ru/docs/cli/operations/authentication/service-account .
@@ -319,8 +260,8 @@ Initializing the backend...
 
 Initializing provider plugins...
 - Finding latest version of yandex-cloud/yandex...
-- Installing yandex-cloud/yandex v0.70.0...
-- Installed yandex-cloud/yandex v0.70.0 (self-signed, key ID E40F590B50BB8E40)
+- Installing yandex-cloud/yandex v0.71.0...
+- Installed yandex-cloud/yandex v0.71.0 (self-signed, key ID E40F590B50BB8E40)
 
 Partner and community providers are signed by their developers.
 If you'd like to know more about provider signing, you can read about it here:
@@ -341,12 +282,12 @@ If you ever set or change modules or backend configuration for Terraform,
 rerun this command to reinitialize your working directory. If you forget, other
 commands will detect it and remind you to do so if necessary.
 ```
-
-Выполняю  команду terraform plan .
+Применяю terraform plan:
 ```
 [alexvk@archbox terraform]$ terraform plan
 
-Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+Terraform used the selected providers to generate the following execution plan. Resource actions are
+indicated with the following symbols:
   + create
 
 Terraform will perform the following actions:
@@ -361,7 +302,7 @@ Terraform will perform the following actions:
       + id                        = (known after apply)
       + metadata                  = {
           + "ssh-keys" = <<-EOT
-                centos:ssh-rsa [key skipped] alexvk@archbox
+                centos:ssh-rsa AAAAB3N[skipped]alexvk@archbox
             EOT
         }
       + name                      = "node01"
@@ -380,7 +321,7 @@ Terraform will perform the following actions:
           + initialize_params {
               + block_size  = (known after apply)
               + description = (known after apply)
-              + image_id    = "fd8jt4i54r12uvrsheh1"
+              + image_id    = "fd8ps7ctj31891r2jjg1"
               + name        = "root-node01"
               + size        = 50
               + snapshot_id = (known after apply)
@@ -449,15 +390,17 @@ Changes to Outputs:
   + external_ip_address_node01_yandex_cloud = (known after apply)
   + internal_ip_address_node01_yandex_cloud = (known after apply)
 
-─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+─────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these actions if you run "terraform apply" now.
+Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take exactly these
+actions if you run "terraform apply" now.
 ```
-Применяю план Terraform:
+После просмотра плана выполняю действия по формированию ландшафта:
 ```
 [alexvk@archbox terraform]$ terraform apply -auto-approve
 
-Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
+Terraform used the selected providers to generate the following execution plan. Resource actions are
+indicated with the following symbols:
   + create
 
 Terraform will perform the following actions:
@@ -472,7 +415,7 @@ Terraform will perform the following actions:
       + id                        = (known after apply)
       + metadata                  = {
           + "ssh-keys" = <<-EOT
-                centos:ssh-rsa [keys skipped] alexvk@archbox
+                centos:ssh-rsa AAAAB3N[skipped]alexvk@archbox
             EOT
         }
       + name                      = "node01"
@@ -491,7 +434,7 @@ Terraform will perform the following actions:
           + initialize_params {
               + block_size  = (known after apply)
               + description = (known after apply)
-              + image_id    = "fd8jt4i54r12uvrsheh1"
+              + image_id    = "fd8ps7ctj31891r2jjg1"
               + name        = "root-node01"
               + size        = 50
               + snapshot_id = (known after apply)
@@ -560,77 +503,132 @@ Changes to Outputs:
   + external_ip_address_node01_yandex_cloud = (known after apply)
   + internal_ip_address_node01_yandex_cloud = (known after apply)
 yandex_vpc_network.default: Creating...
-yandex_vpc_network.default: Creation complete after 2s [id=enper2mic8b24kcov6p5]
+yandex_vpc_network.default: Creation complete after 1s [id=enp1miiodi7rt0onr34q]
 yandex_vpc_subnet.default: Creating...
-yandex_vpc_subnet.default: Creation complete after 1s [id=e9bks8ag1pgvlv7uvqal]
+yandex_vpc_subnet.default: Creation complete after 0s [id=e9bugq4i2o8a7kb8vks8]
 yandex_compute_instance.node01: Creating...
 yandex_compute_instance.node01: Still creating... [10s elapsed]
 yandex_compute_instance.node01: Still creating... [20s elapsed]
 yandex_compute_instance.node01: Still creating... [30s elapsed]
-yandex_compute_instance.node01: Still creating... [40s elapsed]
-yandex_compute_instance.node01: Creation complete after 42s [id=fhm1ektvc3i5ac6ihc0r]
+yandex_compute_instance.node01: Creation complete after 40s [id=fhm940mrqpn5npkjvf3p]
 
 Apply complete! Resources: 3 added, 0 changed, 0 destroyed.
 
 Outputs:
 
-external_ip_address_node01_yandex_cloud = "51.250.14.67"
-internal_ip_address_node01_yandex_cloud = "192.168.101.8"
+external_ip_address_node01_yandex_cloud = "84.201.128.102"
+internal_ip_address_node01_yandex_cloud = "192.168.101.31"
 ```
+Свойства ВМ в консоли яндекс-облака:
+![Скриншот состояния VM](images/657399123.png)
+Задание выполнено.
+
+
+# Task 3
+
+*Создать ваш первый готовый к боевой эксплуатации компонент мониторинга, состоящий из стека микросервисов.*
+
+*Для получения зачета, вам необходимо предоставить:*
+
+* *Скриншот работающего веб-интерфейса Grafana с текущими метриками, как на примере ниже*
+
+Для выполнения задания используется Ansible.  
+
+
 Запускаю в работу ansible playbook, заменив директиву "package" на "name" в файле *provision.yml*. Также
-нужно внести ip-адрес "51.250.14.67" созданной ВМ в файл *inventory*.
+нужно внести ip-адрес "84.201.128.102" созданной ВМ в файл *inventory*.
 ```
 [alexvk@archbox ansible]$ ansible-playbook provision.yml 
 
-PLAY [nodes] *************************************************************************************************************************************************************
+PLAY [nodes] *************************************************************************************************
 
-TASK [Gathering Facts] ***************************************************************************************************************************************************
+TASK [Gathering Facts] ***************************************************************************************
 Enter passphrase for key '/home/alexvk/.ssh/id_rsa': 
 ok: [node01.netology.cloud]
 
-TASK [Create directory for ssh-keys] *************************************************************************************************************************************
+TASK [Create directory for ssh-keys] *************************************************************************
 ok: [node01.netology.cloud]
 
-TASK [Adding rsa-key in /root/.ssh/authorized_keys] **********************************************************************************************************************
-ok: [node01.netology.cloud]
-
-TASK [Checking DNS] ******************************************************************************************************************************************************
+TASK [Adding rsa-key in /root/.ssh/authorized_keys] **********************************************************
 changed: [node01.netology.cloud]
 
-TASK [Installing tools] **************************************************************************************************************************************************
+TASK [Checking DNS] ******************************************************************************************
+changed: [node01.netology.cloud]
+
+TASK [Installing tools] **************************************************************************************
 changed: [node01.netology.cloud] => (item=git)
 ok: [node01.netology.cloud] => (item=curl)
 
-TASK [Add docker repository] *********************************************************************************************************************************************
+TASK [Add docker repository] *********************************************************************************
 changed: [node01.netology.cloud]
 
-TASK [Installing docker package] *****************************************************************************************************************************************
+TASK [Installing docker package] *****************************************************************************
 changed: [node01.netology.cloud] => (item=docker-ce)
 ok: [node01.netology.cloud] => (item=docker-ce-cli)
 ok: [node01.netology.cloud] => (item=containerd.io)
 
-TASK [Enable docker daemon] **********************************************************************************************************************************************
+TASK [Enable docker daemon] **********************************************************************************
 changed: [node01.netology.cloud]
 
-TASK [Install docker-compose] ********************************************************************************************************************************************
+TASK [Install docker-compose] ********************************************************************************
 changed: [node01.netology.cloud]
 
-TASK [Synchronization] ***************************************************************************************************************************************************
+TASK [Synchronization] ***************************************************************************************
 changed: [node01.netology.cloud]
 
-TASK [Pull all images in compose] ****************************************************************************************************************************************
+TASK [Pull all images in compose] ****************************************************************************
 changed: [node01.netology.cloud]
 
-TASK [Up all services in compose] ****************************************************************************************************************************************
+TASK [Up all services in compose] ****************************************************************************
 changed: [node01.netology.cloud]
 
-PLAY RECAP ***************************************************************************************************************************************************************
-node01.netology.cloud      : ok=12   changed=9    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+PLAY RECAP ***************************************************************************************************
+node01.netology.cloud      : ok=12   changed=10   unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
 ```
 
-Пакеты установлены успешно, и инстанс готов обслуживать запросы. Ниже приведены скриншоты из веб-консоли яндекс-облака и собственно Grafana:  
-![Скриншот состояния VM](images/1643878712.png)
-![Скриншот Grafana](images/1643878602.png)
+Пакеты установлены успешно, и инстанс готов обслуживать запросы. Ниже приведены скриншоты из веб-консоли собственно Grafana:  
+![Скриншот Grafana](images/67129387.png)
 Задание выполнено.
 
+# Task 4
+
+*Создать вторую ВМ и подключить её к мониторингу развёрнутому на первом сервере.*
+
+*Для получения зачета, вам необходимо предоставить:*
+
+* *Скриншот из Grafana, на котором будут отображаться метрики добавленного вами сервера.*
+
+Создана вторая нода, поступаю как в задании 2. Для этого создан каталог terraform2 с копией файлов из предыдущего задания.
+В файлах node02.tf (переименован из node01.tf), output.tf все node01 изменены на node02. Параметры сервера в файле node02.tf 
+также изменены - CPU=2, RAM=2G, HDSize=10G.  
+Для работы в существующей сети  выполнены команды ``terraform import yandex_vpc_network.default && terraform import yandex_vpc_subnet.default``. 
+Далее после выполнения terraform apply получаю готовый инстанс с заданными параметрами, см. скриншот:
+![Скриншот Grafana](images/612893021.png)
+
+Список работающих инстансов:
+```
+[alexvk@archbox ansible]$ yc compute instance list
++----------------------+--------+---------------+---------+----------------+----------------+
+|          ID          |  NAME  |    ZONE ID    | STATUS  |  EXTERNAL IP   |  INTERNAL IP   |
++----------------------+--------+---------------+---------+----------------+----------------+
+| fhm4vk6ea9ltp20l9clj | node02 | ru-central1-a | RUNNING | 84.201.175.71  | 192.168.101.12 |
+| fhm940mrqpn5npkjvf3p | node01 | ru-central1-a | RUNNING | 84.201.128.102 | 192.168.101.31 |
++----------------------+--------+---------------+---------+----------------+----------------+
+```
+Список инстансов скриншотом:
+![Скриншот Grafana](images/6720983781.png)
+Аналогично заданию 3, создаю новый каталог ansible2, меняя параметры в файле inventory для работы с node02.
+```
+[manager]
+node02.netology.cloud ansible_host=84.201.175.71
+```
+Запускаю ``ansible-playbook provision.yml``, получаю  аналогичный node01 инстанс с именем node02.  
+Далее, на сервере node01 в Grafana создаю источник данных Prometheus-2, которым будет выступать node02
+(admin:admin@http://192.168.101.12:9090), см.скриншот:
+![Скриншот Grafana](images/670536819.png)
+После чего копирую дашборд для node01 и в свойствах метрик (в заголовках) меняю источник на Prometheus-2 (node02). 
+Скриншот вывода:
+![Скриншот Grafana](images/67530986.png)
+Очевидно, что Grafana получает метрики от node02.  
+Задание выполнено.
 
