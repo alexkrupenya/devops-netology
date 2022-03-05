@@ -37,6 +37,7 @@ docker build -t alexkrupenya/escentos .
 Ссылка на Dockerfile: [Dockerfile](Dockerfile)  
 Ссылка на elasticsearch.yml: [elasticsearch.yml](config/elasticsearch.yml)  
 Ссылка на elasticsearch.repo: [elasticsearch.repo](config/elasticsearch.repo)  
+Ссылка на образ docker: [Elasticsearch/centos7 docker image](https://hub.docker.com/r/alexkrupenya/escentos)
 Запрос GET к свежеиспеченному серверу:
 ```
 sh-4.2$ curl --request GET localhost:9200/
