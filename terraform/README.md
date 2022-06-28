@@ -490,6 +490,6 @@ Destroy complete! Resources: 3 destroyed.
 
 В соответствии с ТЗ созданы файлы Terraform, выполнено развертывание инфраструктуры. Для развертывания тестовой виртуальной машины выбран образ CentOS 8. 
 Скриншот консоли яндекс-облака:
-![Screenshot](images/1656402952.png)
+![Screenshot](../images/1656402952.png)
 
 Для создания образов AMI в Амазон-облаке применяются ami-tools [ссылка](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ami-tools-commands.html) .
