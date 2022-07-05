@@ -56,7 +56,7 @@ name: terratest
 [alexvk@archbox ~]$  yc resource-manager folder add-access-binding b1g68bss5trqk0sk71o5 --role editor --subject serviceAccount:ajet[skipped]
 done (1s)
 ```
-![Скриншот списка пользователей](images/1656496035.png)
+![Скриншот списка пользователей](../../images/1656496035.png)
 Теперь необходимо создать ключ доступа для сервисного аккаунта:
 ```
 [alexvk@archbox ~]$ yc iam access-key create --service-account-name terratest
@@ -67,7 +67,7 @@ access_key:
   key_id: YCAJEY[skpped]
 secret: YCOM4MU[skipped]
 ```
-Для регистрации бэкенд-а нееобходимо по документации добавить в файл [versions.tf](versions.tf) соответствующие строки и выполнить инициализацию ``terraform init``; исходный текст
+Для регистрации бэкенд-а нееобходимо по документации добавить в файл [versions.tf](../7.3/versions.tf) соответствующие строки и выполнить инициализацию ``terraform init``; исходный текст
 приведен в моём репозитории на github.com. 
 ```
 [alexvk@archbox 7.3]$ vi ~/.terraformrc
