@@ -1,0 +1,18 @@
+
+version: "3.9"
+
+services:
+ centos7:
+  image: centos:7
+  container_name: centos7
+  entrypoint: "sleep 1d"
+
+ ubuntu:
+   build: .
+   container_name: ubuntu
+   entrypoint: "sleep 1d"
+
+ fedora:
+  image: fedora
+  container_name: fedora
+  entrypoint: "sleep 1d"
