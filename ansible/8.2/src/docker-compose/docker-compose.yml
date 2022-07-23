@@ -1,0 +1,14 @@
+
+version: "3.9"
+
+services:
+ elasticsearch:
+  build: .
+  container_name: esh
+  entrypoint: "sleep 1d"
+
+ kibana:
+   build: .
+   container_name: kbn
+   entrypoint: "sleep 1d"
+

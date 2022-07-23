@@ -1,0 +1,11 @@
+---
+elasticsearch:
+  hosts:
+    esh:
+      ansible_connection: docker
+      ansible_user: root
+kibana:
+  hosts:
+    kbn:
+      ansible_connection: docker
+      ansible_user: root
