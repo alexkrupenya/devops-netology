@@ -1,0 +1,4 @@
+---
+# defaults file for kibana-role
+  kibana_version: "7.17.3"
+  kibana_home: "/opt/kibana/{{ kibana_version }}"

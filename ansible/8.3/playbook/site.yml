@@ -1,0 +1,10 @@
+---
+- hosts: all
+  roles:
+  - java-role
+- hosts: esh
+  roles:
+  - elastic-role
+- hosts: kbn
+  roles:
+  - kibana-role
