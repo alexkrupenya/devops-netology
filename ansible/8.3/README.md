@@ -391,7 +391,7 @@ Invalid -W option ignored: unknown warning category: 'CryptographyDeprecationWar
 localhost | CHANGED => {"backup": "","changed": true,"msg": "line added"}
 INFO     Initialized role in /home/alexvk/learn/devops/git/kibana-role/kibana_role successfully.
 ```
-Затем во всех yaml-файлах проекта заменяю параметры на желаемые. Костыли, но что делать некуда. 
+Затем во всех yaml-файлах проекта заменяю параметры на желаемые. Костыль, но деваться некуда 
 
 6. Выполнено, результат в [playbook](https://github.com/alexkrupenya/devops-netology/tree/main/ansible/8.3/playbook)
 
