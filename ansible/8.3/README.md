@@ -50,9 +50,9 @@ molecule 4.0.1 using python 3.10
 
 ## Основная часть
 
-Наша основная цель - разбить наш playbook на отдельные roles. Задача: сделать roles для elastic, kibana и написать playbook для использования этих ролей. Ожидаемый результат: существуют два ваших репозитория с roles и один репозиторий с playbook.
+*Наша основная цель - разбить наш playbook на отдельные roles. Задача: сделать roles для elastic, kibana и написать playbook для использования этих ролей. Ожидаемый результат: существуют два ваших репозитория с roles и один репозиторий с playbook.*
 
-1. Создать в старой версии playbook файл `requirements.yml` и заполнить его следующим содержимым:
+1. *Создать в старой версии playbook файл `requirements.yml` и заполнить его следующим содержимым:*
    ```yaml
    ---
      - src: git@github.com:netology-code/mnt-homeworks-ansible.git
@@ -60,20 +60,20 @@ molecule 4.0.1 using python 3.10
        version: "1.0.1"
        name: java 
    ```
-2. При помощи `ansible-galaxy` скачать себе эту роль. Запустите  `molecule test`, посмотрите на вывод команды.
-3. Перейдите в каталог с ролью elastic-role и создайте сценарий тестирования по умолчаню при помощи `molecule init scenario --driver-name docker`.
-4. Добавьте несколько разных дистрибутивов (centos:8, ubuntu:latest) для инстансов и протестируйте роль, исправьте найденные ошибки, если они есть.
-5. Создайте новый каталог с ролью при помощи `molecule init role --driver-name docker kibana-role`. Можете использовать другой драйвер, который более удобен вам.
-6. На основе tasks из старого playbook заполните новую role. Разнесите переменные между `vars` и `default`. Проведите тестирование на разных дистрибитивах (centos:7, centos:8, ubuntu).
-7. Выложите все roles в репозитории. Проставьте тэги, используя семантическую нумерацию.
-8. Добавьте roles в `requirements.yml` в playbook.
-9. Переработайте playbook на использование roles.
-10. Выложите playbook в репозиторий.
-11. В ответ приведите ссылки на оба репозитория с roles и одну ссылку на репозиторий с playbook.
+2. *При помощи `ansible-galaxy` скачать себе эту роль. Запустите  `molecule test`, посмотрите на вывод команды.*
+3. *Перейдите в каталог с ролью elastic-role и создайте сценарий тестирования по умолчаню при помощи `molecule init scenario --driver-name docker`.*
+4. *Добавьте несколько разных дистрибутивов (centos:8, ubuntu:latest) для инстансов и протестируйте роль, исправьте найденные ошибки, если они есть.*
+5. *Создайте новый каталог с ролью при помощи `molecule init role --driver-name docker kibana-role`. Можете использовать другой драйвер, который более удобен вам.*
+6. *На основе tasks из старого playbook заполните новую role. Разнесите переменные между `vars` и `default`. Проведите тестирование на разных дистрибитивах (centos:7, centos:8, ubuntu).*
+7. *Выложите все roles в репозитории. Проставьте тэги, используя семантическую нумерацию.*
+8. *Добавьте roles в `requirements.yml` в playbook.*
+9. *Переработайте playbook на использование roles.*
+10. *Выложите playbook в репозиторий.*
+11. *В ответ приведите ссылки на оба репозитория с roles и одну ссылку на репозиторий с playbook.*
 
 ### Решение
 
-1. Файл requerements.yml создан по приведенному шаблону.
+1. Файл requirements.yml создан по приведенному шаблону.
 2. Скачаю роль, как указано [в документации](https://docs.ansible.com/ansible/latest/galaxy/user_guide.html#install-multiple-collections-with-a-requirements-file):
 ```
 [alexvk@archbox 8.3]$ ansible-galaxy install -r requirements.yml --roles-path .
@@ -197,7 +197,7 @@ localhost                  : ok=2    changed=2    unreachable=0    failed=0    s
 INFO     Pruning extra files from scenario ephemeral directory
 ```
 
-4. Добавляю контейнеры pycontribs/centos7, pycontribs/centos8, образ для ubuntu собираю из версии ubuntu trusty и python 2.7. Согласно [документации](https://molecule.readthedocs.io/en/latest/configuration.html#molecule.platforms.Platforms), инстансы нужно добавить в файл molecule/default/molecule.yml.
+4. Добавляю контейнеры pycontribs/centos7, pycontribs/centos8, образ для ubuntu собираю из версии ubuntu trusty и python 2.7. Согласно [документации](https://molecule.readthedocs.io/en/latest/configuration.html#molecule.platforms.Platforms), инстансы нужно добавить в файл `molecule/default/molecule.yml`.
 ```
 [alexvk@archbox elastic-role]$ molecule test
 INFO     default scenario test matrix: dependency, lint, cleanup, destroy, syntax, create, prepare, converge, idempotence, side_effect, verify, cleanup, destroy
@@ -395,11 +395,11 @@ INFO     Initialized role in /home/alexvk/learn/devops/git/kibana-role/kibana_ro
 
 6. Выполнено, результат в [playbook](https://github.com/alexkrupenya/devops-netology/tree/main/ansible/8.3/playbook)
 
-7. Выполнено, результат в репозиториях [elastic-role](https://github.com/alexkrupenya/elastic-role/tree/0.1.1)) и [kibana](https://github.com/alexkrupenya/kibana-role/tree/0.1.1)
+7. Выполнено, результат в репозиториях [elastic-role](https://github.com/alexkrupenya/elastic-role/tree/0.1.1) и [kibana](https://github.com/alexkrupenya/kibana-role/tree/0.1.1)
 
 8. Выполнено, [здесь](https://github.com/alexkrupenya/devops-netology/tree/main/ansible/8.3/playbook/requirements.yml)
 
-9. Скачаю роли с помощью `ansible-galaxy install -r requirements.yml --roles-path roles/` и выполненю playbook с использованием ролей:
+9. Скачаю роли с помощью `ansible-galaxy install -r requirements.yml --roles-path roles/` и выполню playbook с использованием ролей:
 ```
 [alexvk@archbox playbook]$ ansible-playbook site.yml -i inventory/prod.yml 
 
