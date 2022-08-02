@@ -1,0 +1,8 @@
+---
+- name: Test for sample file module
+  hosts: localhost
+  tasks:
+  - name: Make a file
+    my_own_namespace.mycollection.my_own_module:
+      path: /tmp/test_file.txt
+      content: "Glad to see you here!"

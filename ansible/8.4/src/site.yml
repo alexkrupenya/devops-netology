@@ -1,0 +1,8 @@
+---
+- name: Test for sample file module
+  hosts: localhost
+  tasks:
+  - name: Make a file
+    my_own_module:
+      path: /home/alexvk/test00.txt
+      content: "Ansible module testing"
